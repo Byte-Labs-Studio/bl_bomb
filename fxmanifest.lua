@@ -1,29 +1,31 @@
-fx_version 'cerulean'
+-- fx_version 'cerulean'
 
-game "gta5"
+-- game "gta5"
 
-author "Byte Labs"
-version '1.0.0'
-description 'Byte Labs Svelte / CFX Lua template.'
-repository 'https://github.com/Byte-Labs-Project/bl_svelte_template'
+-- author "Byte Labs"
+-- version '1.0.0'
+-- description 'Byte Labs Svelte / CFX Lua template.'
+-- repository 'https://github.com/Byte-Labs-Project/bl_svelte_template'
 
-lua54 'yes'
+-- lua54 'yes'
 
-ui_page 'build/index.html'
--- ui_page 'http://localhost:3000/' --for dev
+-- ui_page 'build/index.html'
+-- -- ui_page 'http://localhost:3000/' --for dev
 
-shared_script {
-    'shared/**'
-}
+-- shared_script {
+--     'shared/**'
+-- }
 
-server_script {
-    'server/**'
-}
+-- server_script {
+-- '@bl_bridge/imports/server.lua',
+--     'server/**'
+-- }
 
-client_script {
-    'client/**',
-}
+-- client_script {
+--     '@bl_bridge/imports/client.lua',
+--     'client/**',
+-- }
 
-files {
-    'build/**',
-}
+-- files {
+--     'build/**',
+-- }

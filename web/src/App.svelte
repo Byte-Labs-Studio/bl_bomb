@@ -2,7 +2,8 @@
     import { CONFIG, IS_BROWSER } from './stores/stores';
     import { InitialiseListen } from '@utils/listeners';
     import Visibility from '@providers/Visibility.svelte';
-    import ImageHolder from '@components/ImageHolder.svelte';
+    import Cables from '@components/Cables.svelte';
+    import Keypad from '@components/Keypad.svelte';
 
     CONFIG.set({
         fallbackResourceName: 'debug',
@@ -13,7 +14,11 @@
 </script>
 
 <Visibility>
-    <ImageHolder />
+
+<Cables />
+<Keypad />
+
+
 </Visibility>
 
 {#if import.meta.env.DEV}

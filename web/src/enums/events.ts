@@ -1,15 +1,13 @@
 export enum Receive {
-    visible = 'resource:visible',
-    imageResize = 'resource:imageSize',
-    imageInvert = 'resource:imageInvert',
-    changeText = 'resource:changeText',
-    resetText = 'resource:resetText',
+    visible = 'bomb:visible',
+    setCables = 'bomb:setCables',
+    setState = 'bomb:setState',
 }
 
 export enum Send {
-    close = 'resource:close',
-    imageResize = 'resource:imageSize',
-    imageInvert = 'resource:imageInvert',
-    changeText = 'resource:changeText',
-    resetText = 'resource:resetText',
+    close = 'bomb:close',
+    setCable = 'bomb:setCable',
+    cutCable = 'bomb:cutCable',
+    updateTimer = 'bomb:updateTimer',
+    startBomb = 'bomb:startBomb',
 }
