@@ -1,5 +1,4 @@
 local ActiveBombs = {}
-local Config = require 'shared.config'
 
 Framework.core.RegisterUsableItem(Config.itemName, function(source)
     local xPlayer = Framework.core.GetPlayerFromId(source)
@@ -16,10 +15,10 @@ Framework.core.RegisterUsableItem(Config.itemName, function(source)
         playersInRange = {}
     }
 
-    TriggerClientEvent('bomb:client:registerBomb', -1, id, coords.x, coords.y, coords.z, heading)
+    TriggerClientEvent('bl_bomb:client:registerBomb', -1, id, coords.x, coords.y, coords.z, heading)
 end)
 
-RegisterNetEvent('bomb:server:updatePlayerRange', function(bombId, playerId, inRange)
+RegisterNetEvent('bl_bomb:server:updatePlayerRange', function(bombId, playerId, inRange)
     if ActiveBombs[bombId] then
         if inRange then
             ActiveBombs[bombId].playersInRange[playerId] = true
@@ -29,16 +28,16 @@ RegisterNetEvent('bomb:server:updatePlayerRange', function(bombId, playerId, inR
     end
 end)
 
-RegisterNetEvent('bomb:server:updateBombState', function(bombId, newState)
+RegisterNetEvent('bl_bomb:server:updateBombState', function(bombId, newState)
     if ActiveBombs[bombId] then
         ActiveBombs[bombId].state = newState
-        TriggerClientEvent('bomb:client:updateBombState', -1, bombId, newState)
+        TriggerClientEvent('bl_bomb:client:updateBombState', -1, bombId, newState)
     end
 end)
 
-RegisterNetEvent('bomb:server:removeBomb', function(bombId)
+RegisterNetEvent('bl_bomb:server:removeBomb', function(bombId)
     if ActiveBombs[bombId] then
         ActiveBombs[bombId] = nil
-        TriggerClientEvent('bomb:client:removeBomb', -1, bombId)
+        TriggerClientEvent('bl_bomb:client:removeBomb', -1, bombId)
     end
 end)
