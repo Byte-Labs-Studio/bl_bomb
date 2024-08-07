@@ -10,6 +10,8 @@ Bomb.__index = Bomb
 --- @field targetId any
 --- @field timer table<number, TTimer>
 --- @field cables table<number, TCable>
+--- @field tickTime number
+--- @field timerEnd number
 
 -- Global table to store all bombs
 --- @type table<number, Bomb>
@@ -35,6 +37,8 @@ function Bomb:new(id, x, y, z, w)
         targetId = self:createTarget(x, y, z, w),
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
+        tickTime = GetGameTimer(),
+        timerEnd = GetGameTimer() + (Config.bombTimer or 30000)  -- 30 seconds for example
     }
 
 	local self = setmetatable(bomb, Bomb)
@@ -99,7 +103,13 @@ end
 
 --- Opens the bomb
 function Bomb:openBomb()
-    print("Opening bomb")
+    print("Opening bomb UI")
+    -- Trigger some NUI event to open the bomb UI
+    SendNUIMessage({
+        action = "openBomb",
+        id = self.id
+    })
+    SetNuiFocus(true, true)
 end
 
 --- Picks up the bomb
@@ -122,11 +132,11 @@ end
 function Bomb:createBomb(x, y, z)
     local model = lib.requestModel("lev_briefcase")
 
-    	-- The offset is to make the bomb look like it's in front of the player
-	local bombOffset = -0.8
-	y = y + bombOffset
+    -- The offset is to make the bomb look like it's in front of the player
+    local bombOffset = -0.8
+    y = y + bombOffset
 
-	local object = CreateObject(model, x, y - bombOffset, z, true, true, false)
+    local object = CreateObject(model, x, y - bombOffset, z, true, true, false)
     PlaceObjectOnGroundProperly(object)
     return object
 end
@@ -157,7 +167,58 @@ function Bomb:createTimer(x, y, z)
             changed = false,
         }
     end
+    -- Start timer countdown
+    Citizen.CreateThread(function()
+        while true do
+            Citizen.Wait(1000)
+            if self.tickTime then
+                self:handleTimerTick()
+            end
+        end
+    end)
+
     return timers
+end
+
+--- Handles the timer tick
+function Bomb:handleTimerTick()
+    local currentTime = GetGameTimer()
+    local timeElapsed = (currentTime - self.tickTime) / 1000
+
+    if timeElapsed >= 1 then
+        self.tickTime = currentTime
+        local secondsLeft = self:getSecondsLeft()
+
+        if secondsLeft <= 10 then
+            PlaySoundFromEntity(-1, "Beep_Red", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
+        else
+            PlaySoundFromEntity(-1, "Beep_Blue", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
+        end
+
+        if secondsLeft <= 0 then
+            self:detonate()
+        end
+    end
+
+    if secondsLeft < 10 then
+        Citizen.Wait(500)
+        PlaySoundFromEntity(-1, "Beep_Red", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
+    end
+end
+
+--- Gets the seconds left on the timer
+--- @return number
+function Bomb:getSecondsLeft()
+    local currentTime = GetGameTimer()
+    return math.max(0, math.floor((self.timerEnd - currentTime) / 1000))
+end
+
+--- Detonates the bomb
+function Bomb:detonate()
+    print("Bomb detonated!")
+    -- Add explosion effect
+    AddExplosion(self.coords.x, self.coords.y, self.coords.z, 2, 1.0, true, false, 1.0, true)
+    self:destroy()
 end
 
 --- Randomizes cable colors
@@ -202,8 +263,8 @@ function Bomb:clearDataExceptPosition()
 end
 
 -- Event listener to update bomb state
-RegisterNetEvent("bomb:client:updateBombState")
-AddEventHandler("bomb:client:updateBombState", function(bombId, newState)
+RegisterNetEvent("bl_bomb:client:updateBombState")
+AddEventHandler("bl_bomb:client:updateBombState", function(bombId, newState)
     if AllBombs[bombId] then
         AllBombs[bombId].state = newState
         print("Updated state for bomb ID:", bombId)
@@ -211,14 +272,14 @@ AddEventHandler("bomb:client:updateBombState", function(bombId, newState)
 end)
 
 -- Event listener to register a bomb from the server
-RegisterNetEvent('bomb:client:registerBomb')
-AddEventHandler('bomb:client:registerBomb', function(id, x, y, z, w)
+RegisterNetEvent('bl_bomb:client:registerBomb')
+AddEventHandler('bl_bomb:client:registerBomb', function(id, x, y, z, w)
     Bomb:new(id, x, y, z, w)
 end)
 
 -- Event listener to remove a bomb from the server
-RegisterNetEvent('bomb:client:removeBomb')
-AddEventHandler('bomb:client:removeBomb', function(id)
+RegisterNetEvent('bl_bomb:client:removeBomb')
+AddEventHandler('bl_bomb:client:removeBomb', function(id)
     if AllBombs[id] then
         AllBombs[id]:destroy()
     end

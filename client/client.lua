@@ -8,17 +8,17 @@ RegisterNUICallback(Receive.close, function(_, cb)
     cb(1)
 end)
 
-RegisterNetEvent('bomb:client:registerBomb', function(id)
+RegisterNetEvent('bl_bomb:client:registerBomb', function(id)
     local Bomb = require 'client.bomb'
     Bombs[id] = Bomb:new(id)
 end)
 
-RegisterNetEvent('bomb:client:removeBomb', function(id)
+RegisterNetEvent('bl_bomb:client:removeBomb', function(id)
     Bombs[id]:destroy()
     Bombs[id] = nil
 end)
 
-RegisterNetEvent('bomb:client:useItem', function()
+RegisterNetEvent('bl_bomb:client:useItem', function()
     local Bomb = require 'client.bomb'
     Bombs[id] = Bomb:new()
 end)
