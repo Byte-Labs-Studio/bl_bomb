@@ -1,6 +1,7 @@
 local ActiveBombs = {}
+local config = require('shared.config')
 
-Framework.core.RegisterUsableItem(Config.itemName, function(source)
+Framework.core.RegisterUsableItem(config.itemName, function(source)
     local xPlayer = Framework.core.GetPlayerFromId(source)
     local coords = xPlayer.getCoords()
     local heading = xPlayer.getHeading()

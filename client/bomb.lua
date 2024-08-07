@@ -1,4 +1,5 @@
-local Data = require("client.constants")
+local Data = require('client.constants')
+local config = require('shared.config')
 local Bomb = {}
 Bomb.__index = Bomb
 
@@ -27,6 +28,7 @@ local AllBombs = {}
 function Bomb:new(id, x, y, z, w)
     local object = self:createBomb(x, y, z)
     PlaceObjectOnGroundProperly(object)
+    local id = math.random(1, 10000)
 
     --- @type Bomb
     local bomb = {
@@ -38,7 +40,7 @@ function Bomb:new(id, x, y, z, w)
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
-        timerEnd = GetGameTimer() + (Config.bombTimer or 30000)  -- 30 seconds for example
+        timerEnd = GetGameTimer() + (config.bombTimer or 30000)  -- 30 seconds for example
     }
 
 	local self = setmetatable(bomb, Bomb)
@@ -86,7 +88,7 @@ end
 
 --- Creates a point around the bomb
 function Bomb:createPoint()
-    local range = Config.range or 30
+    local range = config.range or 30
     lib.points.new({
         coords = self.coords,
         size = range,
