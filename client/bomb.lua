@@ -17,6 +17,9 @@ Bomb.__index = Bomb
 -- Global table to store all bombs
 --- @type table<number, Bomb>
 local AllBombs = {}
+local function generateUniqueId()
+    return os.time() + math.random(1, 10000)
+end
 
 --- Creates a new bomb
 --- @param id number The unique ID of the bomb
@@ -28,11 +31,10 @@ local AllBombs = {}
 function Bomb:new(id, x, y, z, w)
     local object = self:createBomb(x, y, z)
     PlaceObjectOnGroundProperly(object)
-    local id = math.random(1, 10000)
 
-    --- @type Bomb
+    ---@class TBomb
     local bomb = {
-        id = id,
+        id = generateUniqueId(),
         coords = vec4(x, y, z, w),
         state = nil,
         object = object,
@@ -40,7 +42,7 @@ function Bomb:new(id, x, y, z, w)
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
-        timerEnd = GetGameTimer() + (config.bombTimer or 30000)  -- 30 seconds for example
+        timerEnd = GetGameTimer() + config.timerDuration * 1000
     }
 
 	local self = setmetatable(bomb, Bomb)
@@ -121,9 +123,17 @@ end
 
 --- Destroys the bomb
 function Bomb:destroy()
-    DeleteObject(self.object)
+    if self.object then
+        DeleteObject(self.object)
+    end
+    if self.targetId then
+        Framework.target.removeZone(self.targetId)
+    end
     AllBombs[self.id] = nil
-    self = nil
+    self.timer = nil
+    self.cables = nil
+    self.state = nil
+    self.object = nil
 end
 
 --- Creates a bomb object
@@ -186,10 +196,10 @@ end
 function Bomb:handleTimerTick()
     local currentTime = GetGameTimer()
     local timeElapsed = (currentTime - self.tickTime) / 1000
+    local secondsLeft = self:getSecondsLeft()
 
     if timeElapsed >= 1 then
         self.tickTime = currentTime
-        local secondsLeft = self:getSecondsLeft()
 
         if secondsLeft <= 10 then
             PlaySoundFromEntity(-1, "Beep_Red", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
@@ -219,7 +229,7 @@ end
 function Bomb:detonate()
     print("Bomb detonated!")
     -- Add explosion effect
-    AddExplosion(self.coords.x, self.coords.y, self.coords.z, 2, 1.0, true, false, 1.0, true)
+    AddExplosion(self.coords.x, self.coords.y, self.coords.z, 2, 5.0, true, false, 1.0)
     self:destroy()
 end
 

@@ -8,17 +8,19 @@ RegisterNUICallback(Receive.close, function(_, cb)
     cb(1)
 end)
 
-RegisterNetEvent('bl_bomb:client:registerBomb', function(id)
+RegisterNetEvent('bl_bomb:client:registerBomb', function(id, x, y, z, w)
     local Bomb = require 'client.bomb'
-    Bombs[id] = Bomb:new(id)
+    Bombs[id] = Bomb:new(id, x, y, z, w)
 end)
 
 RegisterNetEvent('bl_bomb:client:removeBomb', function(id)
-    Bombs[id]:destroy()
-    Bombs[id] = nil
+    if Bombs[id] then
+        Bombs[id]:destroy()
+        Bombs[id] = nil
+    end
 end)
 
-RegisterNetEvent('bl_bomb:client:useItem', function()
-    local Bomb = require 'client.bomb'
-    Bombs[id] = Bomb:new()
+RegisterNetEvent('bl_bomb:client:useItem', function(x, y, z, w)
+    local newId = math.random(1, 10000)
+    Bombs[newId] = Bomb:new(newId, x, y, z, w)
 end)

@@ -1,12 +1,21 @@
 local ActiveBombs = {}
 local config = require('shared.config')
 
+local function generateUniqueBombId()
+    local id
+    repeat
+        id = math.random(1, 10000)
+    until not ActiveBombs[id]
+    return id
+end
+
 Framework.core.RegisterUsableItem(config.itemName, function(source)
     local xPlayer = Framework.core.GetPlayerFromId(source)
+    if not xPlayer then return end
     local coords = xPlayer.getCoords()
     local heading = xPlayer.getHeading()
 
-    local id = math.random(1, 10000)
+    local id = generateUniqueBombId()
     ActiveBombs[id] = {
         id = id,
         timeStarted = os.time(),

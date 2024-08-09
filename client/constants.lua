@@ -41,6 +41,4 @@ Constants.CableUIPosition = {
     [4] = { x = 590, y = 835 },
 }
 
-
-
 return Constants
