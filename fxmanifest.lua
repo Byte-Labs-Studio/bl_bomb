@@ -11,6 +11,9 @@ lua54 'yes'
 ui_page 'build/index.html'
 -- ui_page 'http://localhost:3000/' --for dev
 
+shared_scipts {
+    'shared/**',
+}
 
 server_scripts {
     '@bl_bridge/imports/server.lua',
@@ -23,6 +26,5 @@ client_scripts {
 }
 
 files {
-    'shared/**',
     'build/**'
 }

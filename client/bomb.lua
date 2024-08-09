@@ -1,5 +1,4 @@
 local Data = require('client.constants')
-local config = require('shared.config')
 local Bomb = {}
 Bomb.__index = Bomb
 
