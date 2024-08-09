@@ -1,7 +1,7 @@
-local config = {}
+local Config = {}
 
-config.itemName = 'bomb_item'
-config.range = 30
-config.bombTimer = 30000
+Config.itemName = 'bomb_item'
+Config.range = 30
+Config.bombTimer = 30000
 
-return config
+return Config

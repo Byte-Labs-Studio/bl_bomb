@@ -1,4 +1,5 @@
 local ActiveBombs = {}
+local Config = require 'shared.config'
 
 local function generateUniqueBombId()
     local id
@@ -8,7 +9,7 @@ local function generateUniqueBombId()
     return id
 end
 
-Framework.core.RegisterUsableItem(config.itemName, function(source)
+Framework.core.RegisterUsableItem(Config.itemName, function()
     local xPlayer = Framework.core.GetPlayerFromId(source)
     if not xPlayer then return end
     local coords = xPlayer.getCoords()

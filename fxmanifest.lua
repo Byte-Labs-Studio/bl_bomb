@@ -11,8 +11,8 @@ lua54 'yes'
 ui_page 'build/index.html'
 -- ui_page 'http://localhost:3000/' --for dev
 
-shared_scipts {
-    'shared/**',
+shared_scripts {
+    'shared/**'
 }
 
 server_scripts {
@@ -26,5 +26,5 @@ client_scripts {
 }
 
 files {
-    'build/**'
+    'build/**',
 }
