@@ -1,5 +1,5 @@
 local Data = require 'client.constants'
-local config = require 'shared.config'
+local Config = require 'shared.config'
 local Bomb = {}
 Bomb.__index = Bomb
 
@@ -42,13 +42,13 @@ function Bomb:new(id, x, y, z, w)
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
-        timerEnd = GetGameTimer() + config.timerDuration * 1000
+        timerEnd = GetGameTimer() + Config.timerDuration * 1000
     }
 
 	local self = setmetatable(bomb, Bomb)
     AllBombs[id] = bomb
     bomb:createPoint()
-    TriggerServerEvent("bomb:server:requestState", id)
+    TriggerServerEvent("bl_bomb:server:requestState", id)
 
     return self
 end
@@ -90,16 +90,16 @@ end
 
 --- Creates a point around the bomb
 function Bomb:createPoint()
-    local range = config.range or 30
+    local range = Config.range or 30
     lib.points.new({
         coords = self.coords,
         size = range,
         debug = true,
         onEnter = function()
-            TriggerServerEvent('bomb:server:updatePlayerRange', self.id, GetPlayerServerId(PlayerId()), true)
+            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, GetPlayerServerId(PlayerId()), true)
         end,
         onExit = function()
-            TriggerServerEvent('bomb:server:updatePlayerRange', self.id, GetPlayerServerId(PlayerId()), false)
+            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, GetPlayerServerId(PlayerId()), false)
             self:clearDataExceptPosition()
         end
     })
@@ -118,7 +118,7 @@ end
 
 --- Picks up the bomb
 function Bomb:pickUp()
-    TriggerServerEvent('bomb:server:removeBomb', self.id)
+    TriggerServerEvent('bl_bomb:server:removeBomb', self.id)
 end
 
 --- Destroys the bomb
