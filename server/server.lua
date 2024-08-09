@@ -1,5 +1,4 @@
 local ActiveBombs = {}
-local config = require('shared.config')
 
 local function generateUniqueBombId()
     local id
