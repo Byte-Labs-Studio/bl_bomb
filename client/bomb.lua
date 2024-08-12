@@ -14,10 +14,6 @@ Bomb.__index = Bomb
 --- @field tickTime number
 --- @field timerEnd number
 
-local function generateUniqueId()
-    return os.time() + math.random(1, 10000)
-end
-
 --- Creates a new bomb
 --- @param id number The unique ID of the bomb
 --- @param x number The x position of the bomb
@@ -26,24 +22,24 @@ end
 --- @param w number The heading of the bomb
 --- @return Bomb
 function Bomb:new(id, x, y, z, w)
-    local object = self:createBomb(x, y, z)
-    PlaceObjectOnGroundProperly(object)
+    -- local object = self:createBomb(x, y, z)
 
     ---@class TBomb
     local bomb = {
-        id = generateUniqueId(),
+        id = id,
         coords = vec4(x, y, z, w),
         state = nil,
-        object = object,
+        object = nil,
         targetId = self:createTarget(x, y, z, w),
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
-        timerEnd = GetGameTimer() + Config.timerDuration * 1000
+        timerEnd = GetGameTimer() + Config.timerDuration * 1000,
+        point = self:createPoint()
     }
 
-	local self = setmetatable(bomb, Bomb)
-    bomb:createPoint()
+    self = setmetatable(bomb, Bomb)
+
     TriggerServerEvent("bl_bomb:server:requestState", id)
 
     return self
@@ -87,7 +83,7 @@ end
 --- Creates a point around the bomb
 function Bomb:createPoint()
     local range = Config.range or 30
-    lib.points.new({
+    return lib.points.new({
         coords = self.coords,
         size = range,
         debug = true,
@@ -207,7 +203,7 @@ function Bomb:handleTimerTick()
     end
 
     if secondsLeft < 10 then
-        Citizen.Wait(500)
+        Wait(500)
         PlaySoundFromEntity(-1, "Beep_Red", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
     end
 end
