@@ -10,7 +10,7 @@ local function generateUniqueBombId()
 end
 
 Framework.core.RegisterUsableItem(Config.itemName, function()
-    local xPlayer = Framework.core.GetPlayerFromId(source)
+    local xPlayer = Framework.core.GetPlayer(source)
     if not xPlayer then return end
     local coords = xPlayer.getCoords()
     local heading = xPlayer.getHeading()
