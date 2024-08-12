@@ -1,5 +1,6 @@
 local ActiveBombs = {}
 local Config = require 'shared.config'
+local core = Framework.core
 
 local function generateUniqueBombId()
     local id
@@ -9,11 +10,15 @@ local function generateUniqueBombId()
     return id
 end
 
-Framework.core.RegisterUsableItem(Config.itemName, function()
-    local xPlayer = Framework.core.GetPlayer(source)
-    if not xPlayer then return end
-    local coords = xPlayer.getCoords()
-    local heading = xPlayer.getHeading()
+core.RegisterUsableItem(Config.itemName, function(src)
+    if not src then return end
+
+    local player = core.GetPlayer(src)
+    if not player then return end
+    local ped = GetPlayerPed(src)
+
+    local coords = GetEntityCoords(ped)
+    local heading = GetEntityHeading(ped)
 
     local id = generateUniqueBombId()
     ActiveBombs[id] = {
