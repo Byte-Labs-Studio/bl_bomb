@@ -14,9 +14,6 @@ Bomb.__index = Bomb
 --- @field tickTime number
 --- @field timerEnd number
 
--- Global table to store all bombs
---- @type table<number, Bomb>
-local AllBombs = {}
 local function generateUniqueId()
     return os.time() + math.random(1, 10000)
 end
@@ -46,7 +43,6 @@ function Bomb:new(id, x, y, z, w)
     }
 
 	local self = setmetatable(bomb, Bomb)
-    AllBombs[id] = bomb
     bomb:createPoint()
     TriggerServerEvent("bl_bomb:server:requestState", id)
 
@@ -178,9 +174,9 @@ function Bomb:createTimer(x, y, z)
         }
     end
     -- Start timer countdown
-    Citizen.CreateThread(function()
+    CreateThread(function()
         while true do
-            Citizen.Wait(1000)
+            Wait(1000)
             if self.tickTime then
                 self:handleTimerTick()
             end
@@ -271,28 +267,5 @@ function Bomb:clearDataExceptPosition()
     self.timer = {}
     self.cables = {}
 end
-
--- Event listener to update bomb state
-RegisterNetEvent("bl_bomb:client:updateBombState")
-AddEventHandler("bl_bomb:client:updateBombState", function(bombId, newState)
-    if AllBombs[bombId] then
-        AllBombs[bombId].state = newState
-        print("Updated state for bomb ID:", bombId)
-    end
-end)
-
--- Event listener to register a bomb from the server
-RegisterNetEvent('bl_bomb:client:registerBomb')
-AddEventHandler('bl_bomb:client:registerBomb', function(id, x, y, z, w)
-    Bomb:new(id, x, y, z, w)
-end)
-
--- Event listener to remove a bomb from the server
-RegisterNetEvent('bl_bomb:client:removeBomb')
-AddEventHandler('bl_bomb:client:removeBomb', function(id)
-    if AllBombs[id] then
-        AllBombs[id]:destroy()
-    end
-end)
 
 return Bomb
