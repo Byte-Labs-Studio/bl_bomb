@@ -107,10 +107,8 @@ end
 
 --- Opens the bomb
 function Bomb:openBomb()
-    print("Opening bomb UI")
-    -- Trigger some NUI event to open the bomb UI
     SendNUIMessage({
-        action = "openBomb",
+        action = Send.visible,
         id = self.id
     })
     SetNuiFocus(true, true)
