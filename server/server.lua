@@ -33,6 +33,20 @@ core.RegisterUsableItem(Config.itemName, function(src)
     TriggerClientEvent('bl_bomb:client:registerBomb', -1, id, coords.x, coords.y, coords.z, heading)
 end)
 
+local function getBombState(bombId)
+    local bomb = ActiveBombs[bombId]
+    if bomb then
+        return {
+            id = bomb.id,
+            position = bomb.position,
+            state = bomb.state,
+            cableStates = bomb.cableStates,
+            playersInRange = bomb.playersInRange
+        }
+    end
+    return nil
+end
+
 RegisterNetEvent('bl_bomb:server:updatePlayerRange', function(bombId, playerId, inRange)
     if ActiveBombs[bombId] then
         if inRange then
@@ -55,4 +69,9 @@ RegisterNetEvent('bl_bomb:server:removeBomb', function(bombId)
         ActiveBombs[bombId] = nil
         TriggerClientEvent('bl_bomb:client:removeBomb', -1, bombId)
     end
+end)
+
+RegisterServerEvent("bl_bomb:server:requestState", function(bombId)
+    local bombState = getBombState(bombId)
+    TriggerClientEvent("bl_bomb:client:updateBombState", source, bombId, bombState)
 end)

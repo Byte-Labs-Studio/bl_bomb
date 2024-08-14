@@ -34,7 +34,7 @@ function Bomb:new(id, x, y, z, w)
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
-        timerEnd = GetGameTimer() + Config.timerDuration * 1000,
+        timerEnd = GetGameTimer() + (Config.timerDuration or 30) * 1000,
         point = self:createPoint()
     }
 
@@ -119,7 +119,6 @@ function Bomb:destroy()
     if self.targetId then
         Framework.target.removeZone(self.targetId)
     end
-    AllBombs[self.id] = nil
     self.timer = nil
     self.cables = nil
     self.state = nil
@@ -212,14 +211,20 @@ end
 --- @return number
 function Bomb:getSecondsLeft()
     local currentTime = GetGameTimer()
-    return math.max(0, math.floor((self.timerEnd - currentTime) / 1000))
+    local remainingTime = self.timerEnd - currentTime
+    if remainingTime <= 0 then
+        return 0
+    end
+    return math.floor(remainingTime / 1000)
 end
 
 --- Detonates the bomb
 function Bomb:detonate()
-    print("Bomb detonated!")
-    -- Add explosion effect
     AddExplosion(self.coords.x, self.coords.y, self.coords.z, 2, 5.0, true, false, 1.0)
+    local distance = #(vec3(self.coords.x, self.coords.y, self.coords.z) - GetEntityCoords(PlayerPedId()))
+	if distance < 10 then
+		SetEntityHealth(PlayerPedId(), 0)
+	end
     self:destroy()
 end
 
