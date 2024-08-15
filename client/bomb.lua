@@ -168,17 +168,22 @@ function Bomb:createTimer(x, y, z)
             changed = false,
         }
     end
-    -- Start timer countdown
-    CreateThread(function()
-        while true do
-            Wait(1000)
-            if self.tickTime then
-                self:handleTimerTick()
-            end
-        end
-    end)
+
+    self:startTimerCountdown()
 
     return timers
+end
+
+--- Starts the bomb's timer countdown
+function Bomb:startTimerCountdown()
+    local function tick()
+        if not self.tickTime then return end
+        self:handleTimerTick()
+        if self:getSecondsLeft() > 0 then
+            SetTimeout(1000, tick)
+        end
+    end
+    tick()
 end
 
 --- Handles the timer tick

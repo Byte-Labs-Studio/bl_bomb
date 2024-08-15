@@ -24,3 +24,5 @@ files {
     'shared/**',
     'build/**',
 }
+
+data_file 'DLC_ITYP_REQUEST' 'stream/lev_briefcase.ytyp'

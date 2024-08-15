@@ -15,6 +15,7 @@ RegisterNetEvent('bl_bomb:client:registerBomb', function(id, x, y, z, w)
     Bombs[id] = Bomb:new(id, x, y, z, w)
 end)
 
+-- Event listener to remove a bomb from the server
 RegisterNetEvent('bl_bomb:client:removeBomb', function(id)
     if Bombs[id] then
         Bombs[id]:destroy()
@@ -27,12 +28,5 @@ RegisterNetEvent("bl_bomb:client:updateBombState", function(bombId, newState)
     if Bombs[bombId] then
         Bombs[bombId].state = newState
         print("Updated state for bomb ID:", bombId)
-    end
-end)
-
--- Event listener to remove a bomb from the server
-RegisterNetEvent('bl_bomb:client:removeBomb', function(id)
-    if Bombs[id] then
-        Bombs[id]:destroy()
     end
 end)
