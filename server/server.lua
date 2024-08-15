@@ -49,16 +49,18 @@ end
 
 RegisterNetEvent('bl_bomb:server:updatePlayerRange', function(bombId, inRange)
     local src = source
-    if not ActiveBombs[bombId] then return end
+    local bomb = ActiveBombs[bombId]
+    if not bomb then return end
 
-    ActiveBombs[bombId].playersInRange[src] = inRange and true or nil
+    bomb.playersInRange[src] = inRange and true or nil
 end)
 
 RegisterNetEvent('bl_bomb:server:updateBombState', function(bombId, newState)
-    if ActiveBombs[bombId] then
-        ActiveBombs[bombId].state = newState
-        TriggerClientEvent('bl_bomb:client:updateBombState', -1, bombId, newState)
-    end
+    local bomb = ActiveBombs[bombId]
+    if not bomb then return end
+        
+    bomb.state = newState
+    TriggerClientEvent('bl_bomb:client:updateBombState', -1, bombId, newState)
 end)
 
 RegisterNetEvent('bl_bomb:server:removeBomb', function(bombId)
