@@ -1,8 +1,5 @@
-local Config = {}
-
-
-Config.itemName = 'bomb_suitcase'
-
-
-
-return Config
+return {
+    itemName = 'bomb_suitcase',
+    range = 30,
+    timerDuration = 30
+}

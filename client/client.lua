@@ -1,6 +1,8 @@
 require 'client.utils'
 require 'client.ui'
 
+-- Global table to store all bombs
+--- @type table<number, Bomb>
 local Bombs = {}
 
 RegisterNUICallback(Receive.close, function(_, cb)
@@ -8,17 +10,26 @@ RegisterNUICallback(Receive.close, function(_, cb)
     cb(1)
 end)
 
-RegisterNetEvent('bomb:client:registerBomb', function(id)
+RegisterNetEvent('bl_bomb:client:registerBomb', function(data)
+    local coords, id in data
     local Bomb = require 'client.bomb'
-    Bombs[id] = Bomb:new(id)
+    Bombs[id] = Bomb:new(id, coords.x, coords.y, coords.z, coords.w)
 end)
 
-RegisterNetEvent('bomb:client:removeBomb', function(id)
-    Bombs[id]:destroy()
-    Bombs[id] = nil
+-- Event listener to remove a bomb from the server
+RegisterNetEvent('bl_bomb:client:removeBomb', function(id)
+    local bomb = Bombs[id]
+    if bomb then
+        bomb:destroy()
+        Bombs[id] = nil
+    end
 end)
 
-RegisterNetEvent('bomb:client:useItem', function()
-    local Bomb = require 'client.bomb'
-    Bombs[id] = Bomb:new()
+-- Event listener to update bomb state
+RegisterNetEvent("bl_bomb:client:updateBombState", function(bombId, newState)
+    local bomb = Bombs[bombId]
+    if bomb then
+        bomb.state = newState
+        print("Updated state for bomb ID:", bombId)
+    end
 end)

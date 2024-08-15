@@ -1,31 +1,29 @@
--- fx_version 'cerulean'
+fx_version 'cerulean'
+use_experimental_fxv2_oal 'yes'
+game "gta5"
+lua54 'yes'
 
--- game "gta5"
+ui_page 'build/index.html'
+-- ui_page 'http://localhost:3000/' --for dev
 
--- author "Byte Labs"
--- version '1.0.0'
--- description 'Byte Labs Svelte / CFX Lua template.'
--- repository 'https://github.com/Byte-Labs-Project/bl_svelte_template'
+shared_script {
+    '@ox_lib/init.lua',
+}
 
--- lua54 'yes'
+server_script {
+    '@bl_bridge/imports/server.lua',
+    'server/**'
+}
 
--- ui_page 'build/index.html'
--- -- ui_page 'http://localhost:3000/' --for dev
+client_script {
+    '@bl_bridge/imports/client.lua',
+    'client/**',
+}
 
--- shared_script {
---     'shared/**'
--- }
+files {
+    'client/**',
+    'shared/**',
+    'build/**',
+}
 
--- server_script {
--- '@bl_bridge/imports/server.lua',
---     'server/**'
--- }
-
--- client_script {
---     '@bl_bridge/imports/client.lua',
---     'client/**',
--- }
-
--- files {
---     'build/**',
--- }
+data_file 'DLC_ITYP_REQUEST' 'stream/lev_briefcase.ytyp'
