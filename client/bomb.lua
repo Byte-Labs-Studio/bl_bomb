@@ -3,17 +3,6 @@ local Config = require 'shared.config'
 local Bomb = {}
 Bomb.__index = Bomb
 
---- @class Bomb
---- @field id number
---- @field coords vec4
---- @field state any
---- @field object any
---- @field targetId any
---- @field timer table<number, TTimer>
---- @field cables table<number, TCable>
---- @field tickTime number
---- @field timerEnd number
-
 --- Creates a new bomb
 --- @param id number The unique ID of the bomb
 --- @param x number The x position of the bomb
@@ -27,7 +16,7 @@ function Bomb:new(id, x, y, z, w)
     ---@class TBomb
     local bomb = {
         id = id,
-        coords = vec4(x, y, z, w),
+        coords = vector4(x, y, z, w),
         state = nil,
         object = nil,
         targetId = self:createTarget(x, y, z, w),
@@ -35,7 +24,7 @@ function Bomb:new(id, x, y, z, w)
         cables = self:createCables(),
         tickTime = GetGameTimer(),
         timerEnd = GetGameTimer() + (Config.timerDuration or 30) * 1000,
-        point = self:createPoint()
+        point = self:createPoint(vector3(x, y, z))
     }
 
     self = setmetatable(bomb, Bomb)
@@ -81,10 +70,12 @@ function Bomb:createTarget(x, y, z, h)
 end
 
 --- Creates a point around the bomb
-function Bomb:createPoint()
+--- @param coords vector3 The coordinates of the bomb
+--- @return any
+function Bomb:createPoint(coords)
     local range = Config.range or 30
     return lib.points.new({
-        coords = self.coords,
+        coords = coords,
         size = range,
         debug = true,
         onEnter = function()
@@ -100,7 +91,7 @@ end
 --- Opens the bomb
 function Bomb:openBomb()
     SendNUIMessage({
-        action = Send.visible,
+        action = 'Send.visible',
         id = self.id
     })
     SetNuiFocus(true, true)
@@ -177,11 +168,12 @@ end
 --- Starts the bomb's timer countdown
 function Bomb:startTimerCountdown()
     local function tick()
-        if not self.tickTime then return end
-        self:handleTimerTick()
-        if self:getSecondsLeft() > 0 then
-            SetTimeout(1000, tick)
+        if not self.tickTime or self:getSecondsLeft() <= 0 then
+            self:detonate()
+            return
         end
+        self:handleTimerTick()
+        SetTimeout(1000, tick)
     end
     tick()
 end
@@ -195,11 +187,8 @@ function Bomb:handleTimerTick()
     if timeElapsed >= 1 then
         self.tickTime = currentTime
 
-        if secondsLeft <= 10 then
-            PlaySoundFromEntity(-1, "Beep_Red", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
-        else
-            PlaySoundFromEntity(-1, "Beep_Blue", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
-        end
+        local sound = secondsLeft <= 10 and "Beep_Red" or "Beep_Blue"
+        PlaySoundFromEntity(-1, sound, self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
 
         if secondsLeft <= 0 then
             self:detonate()
@@ -226,10 +215,11 @@ end
 --- Detonates the bomb
 function Bomb:detonate()
     AddExplosion(self.coords.x, self.coords.y, self.coords.z, 2, 5.0, true, false, 1.0)
-    local distance = #(vec3(self.coords.x, self.coords.y, self.coords.z) - GetEntityCoords(PlayerPedId()))
-	if distance < 10 then
-		SetEntityHealth(PlayerPedId(), 0)
-	end
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    local distance = #(vec3(self.coords.x, self.coords.y, self.coords.z) - playerCoords)
+    if distance < 10 then
+        SetEntityHealth(PlayerPedId(), 0)
+    end
     self:destroy()
 end
 
