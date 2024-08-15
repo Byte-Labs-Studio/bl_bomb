@@ -79,10 +79,10 @@ function Bomb:createPoint(coords)
         size = range,
         debug = true,
         onEnter = function()
-            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, GetPlayerServerId(PlayerId()), true)
+            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, true)
         end,
         onExit = function()
-            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, GetPlayerServerId(PlayerId()), false)
+            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, true)
             self:clearDataExceptPosition()
         end
     })
@@ -109,6 +109,7 @@ function Bomb:destroy()
     end
     if self.targetId then
         Framework.target.removeZone(self.targetId)
+        self.targetId = 0
     end
     self.timer = nil
     self.cables = nil
@@ -129,6 +130,9 @@ function Bomb:createBomb(x, y, z)
     y = y + bombOffset
 
     local object = CreateObject(model, x, y - bombOffset, z, true, true, false)
+    while not DoesEntityExist(object) do
+        Wait(100)
+    end
     PlaceObjectOnGroundProperly(object)
     return object
 end
@@ -146,12 +150,13 @@ function Bomb:createTimer(x, y, z)
         local hash = "lev_num" .. i
         local model = lib.requestModel(hash)
         local offset = offsets[i]
-
         local buttonx = x + offset.x
         local buttony = y + offset.y
         local buttonz = z + offset.z
-
         local object = CreateObject(model, buttonx, buttony, buttonz, true, true, false)
+        while not DoesEntityExist(object) do
+            Wait(100)
+        end
         timers[i] = {
             id = i,
             object = object,
@@ -206,30 +211,27 @@ end
 function Bomb:getSecondsLeft()
     local currentTime = GetGameTimer()
     local remainingTime = self.timerEnd - currentTime
-    if remainingTime <= 0 then
-        return 0
-    end
-    return math.floor(remainingTime / 1000)
+    return remainingTime > 0 and math.floor(remainingTime / 1000) or 0
 end
 
 --- Detonates the bomb
 function Bomb:detonate()
+    local ped = cache.ped
     AddExplosion(self.coords.x, self.coords.y, self.coords.z, 2, 5.0, true, false, 1.0)
-    local playerCoords = GetEntityCoords(PlayerPedId())
+    local playerCoords = GetEntityCoords(ped)
     local distance = #(vec3(self.coords.x, self.coords.y, self.coords.z) - playerCoords)
     if distance < 10 then
-        SetEntityHealth(PlayerPedId(), 0)
+        SetEntityHealth(ped, 0)
     end
     self:destroy()
 end
 
 --- Randomizes cable colors
---- @param colours table<number, string>
---- @return table<number, string>
+--- @param colours table<number, string> The list of colors to randomize
+--- @return table<number, string> The shuffled list of colors
 local function randomColours(colours)
-    local shuffled = {}
-    for i, v in ipairs(colours) do shuffled[i] = v end
-    for i = #shuffled, 2, -1 do
+    local shuffled = table.clone(colours)
+        for i = #shuffled, 2, -1 do
         local j = math.random(1, i)
         shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
     end

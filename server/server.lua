@@ -39,26 +39,20 @@ end)
 
 local function getBombState(bombId)
     local bomb = ActiveBombs[bombId]
-    if bomb then
-        return {
-            id = bomb.id,
-            position = bomb.position,
-            state = bomb.state,
-            cableStates = bomb.cableStates,
-            playersInRange = bomb.playersInRange
-        }
-    end
-    return nil
+    return bomb and {
+        id = bomb.id,
+        position = bomb.position,
+        state = bomb.state,
+        cableStates = bomb.cableStates,
+        playersInRange = bomb.playersInRange
+    } or nil
 end
 
-RegisterNetEvent('bl_bomb:server:updatePlayerRange', function(bombId, playerId, inRange)
-    if ActiveBombs[bombId] then
-        if inRange then
-            ActiveBombs[bombId].playersInRange[playerId] = true
-        else
-            ActiveBombs[bombId].playersInRange[playerId] = nil
-        end
-    end
+RegisterNetEvent('bl_bomb:server:updatePlayerRange', function(source, bombId, inRange)
+    if not ActiveBombs[bombId] then return end
+
+    local playerId = source
+    ActiveBombs[bombId].playersInRange[playerId] = inRange and true or nil
 end)
 
 RegisterNetEvent('bl_bomb:server:updateBombState', function(bombId, newState)

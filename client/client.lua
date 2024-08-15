@@ -17,16 +17,18 @@ end)
 
 -- Event listener to remove a bomb from the server
 RegisterNetEvent('bl_bomb:client:removeBomb', function(id)
-    if Bombs[id] then
-        Bombs[id]:destroy()
+    local bomb = Bombs[id]
+    if bomb then
+        bomb:destroy()
         Bombs[id] = nil
     end
 end)
 
 -- Event listener to update bomb state
 RegisterNetEvent("bl_bomb:client:updateBombState", function(bombId, newState)
-    if Bombs[bombId] then
-        Bombs[bombId].state = newState
+    local bomb = Bombs[bombId]
+    if bomb then
+        bomb.state = newState
         print("Updated state for bomb ID:", bombId)
     end
 end)
