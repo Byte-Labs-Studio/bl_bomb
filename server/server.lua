@@ -29,8 +29,12 @@ core.RegisterUsableItem(Config.itemName, function(src)
         cableStates = {},
         playersInRange = {}
     }
-
-    TriggerClientEvent('bl_bomb:client:registerBomb', -1, id, coords.x, coords.y, coords.z, heading)
+    local position = vec4(coords.x, coords.y, coords.z, heading)
+    local bombData = {
+        id = id,
+        coords = position
+    }
+    TriggerClientEvent('bl_bomb:client:registerBomb', -1, bombData)
 end)
 
 local function getBombState(bombId)
