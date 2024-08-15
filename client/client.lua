@@ -10,9 +10,10 @@ RegisterNUICallback(Receive.close, function(_, cb)
     cb(1)
 end)
 
-RegisterNetEvent('bl_bomb:client:registerBomb', function(id, x, y, z, w)
+RegisterNetEvent('bl_bomb:client:registerBomb', function(data)
+    local coords, id in data
     local Bomb = require 'client.bomb'
-    Bombs[id] = Bomb:new(id, x, y, z, w)
+    Bombs[id] = Bomb:new(id, coords.x, coords.y, coords.z, coords.w)
 end)
 
 -- Event listener to remove a bomb from the server
