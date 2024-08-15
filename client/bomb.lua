@@ -82,7 +82,7 @@ function Bomb:createPoint(coords)
             TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, true)
         end,
         onExit = function()
-            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, true)
+            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, false)
             self:clearDataExceptPosition()
         end
     })
