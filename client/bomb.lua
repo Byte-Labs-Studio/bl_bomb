@@ -133,6 +133,7 @@ function Bomb:createBomb(x, y, z)
     while not DoesEntityExist(object) do
         Wait(100)
     end
+    SetModelAsNoLongerNeeded(model)
     PlaceObjectOnGroundProperly(object)
     return object
 end
@@ -157,6 +158,7 @@ function Bomb:createTimer(x, y, z)
         while not DoesEntityExist(object) do
             Wait(100)
         end
+        SetModelAsNoLongerNeeded(model)
         timers[i] = {
             id = i,
             object = object,
