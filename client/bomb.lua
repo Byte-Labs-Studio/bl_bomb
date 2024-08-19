@@ -11,13 +11,14 @@ Bomb.__index = Bomb
 --- @param w number The heading of the bomb
 --- @return Bomb
 function Bomb:new(id, x, y, z, w)
+    local object = self:createBomb(x, y, z)
     ---@class TBomb
     local bomb = {
         id = id,
         coords = vector4(x, y, z, w),
         state = nil,
-        object = self:createBomb(x, y, z),
-        targetId = self:createTarget(x, y, z, w),
+        object = object,
+        targetId = self:createTarget(),
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
@@ -33,18 +34,10 @@ function Bomb:new(id, x, y, z, w)
 end
 
 --- Creates a target for the bomb
---- @param x number
---- @param y number
---- @param z number
---- @param h number
 --- @return any
-function Bomb:createTarget(x, y, z, h)
-    return Framework.target.addBoxZone({
-        coords = vector3(x, y, z),
-        size = vector3(0.5, 0.5, 0.5),
-        rotation = h,
-        distance = 5.0,
-        debug = true,
+function Bomb:createTarget()
+    return Framework.target.addLocalEntity({
+        entity = self.object,
         options = {
             {
                 label = "Take a closer look",
@@ -63,7 +56,9 @@ function Bomb:createTarget(x, y, z, h)
                     self:pickUp()
                 end
             }
-        }
+        },
+        distance = 5.0,
+        debug = false
     })
 end
 
@@ -76,7 +71,7 @@ function Bomb:createPoint(coords)
 
     local range = Config.range or 30
     return lib.points.new({
-        coords = coords.xyz,
+        coords = coords,
         size = range,
         debug = true,
         onEnter = function()
