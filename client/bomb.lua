@@ -11,15 +11,14 @@ Bomb.__index = Bomb
 --- @param w number The heading of the bomb
 --- @return Bomb
 function Bomb:new(id, x, y, z, w)
-    -- local object = self:createBomb(x, y, z)
-
+    local object = self:createBomb(x, y, z)
     ---@class TBomb
     local bomb = {
         id = id,
         coords = vector4(x, y, z, w),
         state = nil,
-        object = nil,
-        targetId = self:createTarget(x, y, z, w),
+        object = object,
+        targetId = self:createTarget(),
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
@@ -35,18 +34,10 @@ function Bomb:new(id, x, y, z, w)
 end
 
 --- Creates a target for the bomb
---- @param x number
---- @param y number
---- @param z number
---- @param h number
 --- @return any
-function Bomb:createTarget(x, y, z, h)
-    return Framework.target.addBoxZone({
-        coords = vector3(x, y, z),
-        size = vector3(0.5, 0.5, 0.5),
-        rotation = h,
-        distance = 5.0,
-        debug = true,
+function Bomb:createTarget()
+    return Framework.target.addLocalEntity({
+        entity = self.object,
         options = {
             {
                 label = "Take a closer look",
@@ -65,14 +56,19 @@ function Bomb:createTarget(x, y, z, h)
                     self:pickUp()
                 end
             }
-        }
+        },
+        distance = 5.0,
+        debug = false
     })
 end
 
 --- Creates a point around the bomb
---- @param coords vector3 The coordinates of the bomb
 --- @return any
 function Bomb:createPoint(coords)
+    if not coords then
+        return nil
+    end
+
     local range = Config.range or 30
     return lib.points.new({
         coords = coords,
@@ -106,15 +102,15 @@ end
 function Bomb:destroy()
     if self.object then
         DeleteObject(self.object)
+        self.object = nil
     end
     if self.targetId then
         Framework.target.removeZone(self.targetId)
-        self.targetId = 0
+        self.targetId = nil
     end
     self.timer = nil
     self.cables = nil
     self.state = nil
-    self.object = nil
 end
 
 --- Creates a bomb object
@@ -218,12 +214,19 @@ end
 
 --- Detonates the bomb
 function Bomb:detonate()
-    local ped = cache.ped
-    AddExplosion(self.coords.x, self.coords.y, self.coords.z, 2, 5.0, true, false, 1.0)
-    local playerCoords = GetEntityCoords(ped)
-    local distance = #(vec3(self.coords.x, self.coords.y, self.coords.z) - playerCoords)
+    if not self.coords then
+        return
+    end
+    local explosionType = 2
+    local explosionRadius = 5.0
+    local isAudible = true
+    local isInvisible = false
+    local cameraShake = 1.0
+    AddExplosion(self.coords.x, self.coords.y, self.coords.z, explosionType, explosionRadius, isAudible, isInvisible, cameraShake)
+    local playerCoords = GetEntityCoords(cache.ped)
+    local distance = #(self.coords - playerCoords)
     if distance < 10 then
-        SetEntityHealth(ped, 0)
+        SetEntityHealth(cache.ped, 0)
     end
     self:destroy()
 end
@@ -233,7 +236,7 @@ end
 --- @return table<number, string> The shuffled list of colors
 local function randomColours(colours)
     local shuffled = table.clone(colours)
-        for i = #shuffled, 2, -1 do
+    for i = #shuffled, 2, -1 do
         local j = math.random(1, i)
         shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
     end
