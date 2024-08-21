@@ -18,7 +18,7 @@ function Bomb:new(id, x, y, z, w)
         coords = vector4(x, y, z, w),
         state = nil,
         object = object,
-        targetId = self:createTarget(),
+        targetId = self:createTarget(object),
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
@@ -35,9 +35,9 @@ end
 
 --- Creates a target for the bomb
 --- @return any
-function Bomb:createTarget()
+function Bomb:createTarget(object)
     return Framework.target.addLocalEntity({
-        entity = self.object,
+        entity = object,
         options = {
             {
                 label = "Take a closer look",
@@ -57,8 +57,6 @@ function Bomb:createTarget()
                 end
             }
         },
-        distance = 5.0,
-        debug = false
     })
 end
 
@@ -72,7 +70,7 @@ function Bomb:createPoint(coords)
     local range = Config.range or 30
     return lib.points.new({
         coords = coords,
-        size = range,
+        distance = range,
         debug = true,
         onEnter = function()
             TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, true)
@@ -86,10 +84,7 @@ end
 
 --- Opens the bomb
 function Bomb:openBomb()
-    SendNUIMessage({
-        action = 'Send.visible',
-        id = self.id
-    })
+    SendNUIEvent(Send.visible, true)
     SetNuiFocus(true, true)
 end
 
@@ -119,7 +114,7 @@ end
 --- @param z number
 --- @return any
 function Bomb:createBomb(x, y, z)
-    local model = lib.requestModel("lev_briefcase")
+    local model = lib.requestModel(`lev_briefcase`)
 
     -- The offset is to make the bomb look like it's in front of the player
     local bombOffset = -0.8

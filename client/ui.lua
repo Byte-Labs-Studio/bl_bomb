@@ -1,7 +1,13 @@
 Send = {
-    visible = "resource:visible",
+    visible = 'bomb:visible',
+    setCables = 'bomb:setCables',
+    setState = 'bomb:setState',
 }
 
 Receive = {
-    close = "resource:close",
+    close = 'bomb:close',
+    setCable = 'bomb:setCable',
+    cutCable = 'bomb:cutCable',
+    updateTimer = 'bomb:updateTimer',
+    startBomb = 'bomb:startBomb',
 }
