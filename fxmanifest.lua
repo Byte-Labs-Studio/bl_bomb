@@ -12,17 +12,17 @@ shared_script {
 
 server_script {
     '@bl_bridge/imports/server.lua',
-    'server/**'
+    'server/init.lua'
 }
 
 client_script {
     '@bl_bridge/imports/client.lua',
-    'client/**',
+    'client/init.lua',
 }
 
 files {
-    'client/**',
-    'shared/**',
+    'client/modules/**',
+    'data/**',
     'build/**',
 }
 

@@ -1,5 +1,5 @@
-local Data = require 'client.constants'
-local Config = require 'shared.config'
+local Data = require 'data.constants'
+local Config = require 'data.config'
 local Bomb = {}
 Bomb.__index = Bomb
 

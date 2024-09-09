@@ -22,6 +22,7 @@ core.RegisterUsableItem(Config.itemName, function(src)
 
     local id = generateUniqueBombId()
     local position = vec4(coords.x, coords.y, coords.z, heading)
+
     ActiveBombs[id] = {
         id = id,
         timeStarted = os.time(),
@@ -30,6 +31,7 @@ core.RegisterUsableItem(Config.itemName, function(src)
         cableStates = {},
         playersInRange = {}
     }
+
     TriggerClientEvent('bl_bomb:client:registerBomb', -1, {
         id = id,
         coords = position
@@ -44,7 +46,7 @@ local function getBombState(bombId)
         state = bomb.state,
         cableStates = bomb.cableStates,
         playersInRange = bomb.playersInRange
-    } or nil
+    }
 end
 
 RegisterNetEvent('bl_bomb:server:updatePlayerRange', function(bombId, inRange)

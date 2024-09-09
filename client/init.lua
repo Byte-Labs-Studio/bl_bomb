@@ -1,5 +1,5 @@
 require 'client.utils'
-require 'client.ui'
+require 'data.ui'
 
 -- Global table to store all bombs
 --- @type table<number, Bomb>
@@ -12,7 +12,7 @@ end)
 
 RegisterNetEvent('bl_bomb:client:registerBomb', function(data)
     local coords, id in data
-    local Bomb = require 'client.bomb'
+    local Bomb = require 'client.modules.bomb'
     Bombs[id] = Bomb:new(id, coords.x, coords.y, coords.z, coords.w)
 end)
 
