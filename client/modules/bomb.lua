@@ -1,5 +1,5 @@
-local Data = require 'data.constants'
-local Config = require 'data.config'
+local Data = lib.load('data.constants')
+local Config = lib.load('data.config')
 local Bomb = {}
 Bomb.__index = Bomb
 

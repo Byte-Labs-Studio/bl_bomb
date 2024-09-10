@@ -1,5 +1,5 @@
 local ActiveBombs = {}
-local Config = require 'shared.config'
+local Config = lib.load('data.config')
 local core = Framework.core
 
 local function generateUniqueBombId()
