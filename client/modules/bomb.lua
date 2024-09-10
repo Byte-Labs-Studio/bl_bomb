@@ -22,7 +22,7 @@ function Bomb:new(id, x, y, z, w)
         timer = self:createTimer(x, y, z),
         cables = self:createCables(),
         tickTime = GetGameTimer(),
-        timerEnd = GetGameTimer() + (Config.timerDuration or 30) * 1000,
+        timerEnd = GetGameTimer() + (Config.TimerDuration or 30) * 1000,
         point = self:createPoint(vector3(x, y, z))
     }
 
@@ -67,7 +67,7 @@ function Bomb:createPoint(coords)
         return nil
     end
 
-    local range = Config.range or 30
+    local range = Config.Range or 30
     return lib.points.new({
         coords = coords,
         distance = range,

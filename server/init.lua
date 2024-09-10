@@ -10,7 +10,7 @@ local function generateUniqueBombId()
     return id
 end
 
-core.RegisterUsableItem(Config.itemName, function(src)
+core.RegisterUsableItem(Config.ItemName, function(src)
     if not src then return end
 
     local player = core.GetPlayer(src)

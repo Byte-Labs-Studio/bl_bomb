@@ -1,4 +1,4 @@
-lib.load('client.utils')
+lib.load('data.utils')
 lib.load('data.ui')
 
 -- Global table to store all bombs
