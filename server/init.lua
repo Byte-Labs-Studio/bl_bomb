@@ -60,7 +60,7 @@ end)
 RegisterNetEvent('bl_bomb:server:updateBombState', function(bombId, newState)
     local bomb = ActiveBombs[bombId]
     if not bomb then return end
-        
+
     bomb.state = newState
     TriggerClientEvent('bl_bomb:client:updateBombState', -1, bombId, newState)
 end)
