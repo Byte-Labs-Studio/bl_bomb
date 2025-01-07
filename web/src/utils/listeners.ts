@@ -16,6 +16,17 @@ const AlwaysListened: DebugEventCallback[] = [
         handler: (data: TCable[]) => {
             CABLES.set(data)
         }
+    },
+    {
+        action: Receive.cutCable,
+        handler: (colour: string) => {
+            CABLES.update(cables =>
+                cables.map((cable, i) => {
+                    if (cable.colour === colour) return { ...cable, cut: true }
+                    return cable;
+                })
+            );
+        }
     }
 ]
 

@@ -18,30 +18,18 @@ const InitDebug: DebugAction[] = [
             {
               "id": 1,
               "colour": "red",
-              "set": false,
-              "trigger": false,
-              "object": null
             },
             {
               "id": 2,
               "colour": "yellow",
-              "set": false,
-              "trigger": false,
-              "object": null
             },
             {
               "id": 3,
               "colour": "blue",
-              "set": false,
-              "trigger": false,
-              "object": null
             },
             {
               "id": 4,
               "colour": "green",
-              "set": false,
-              "trigger": false,
-              "object": null
             }
           ]),
         delay: 0,

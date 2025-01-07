@@ -1,6 +1,7 @@
 export enum Receive {
     visible = 'bomb:visible',
     setCables = 'bomb:setCables',
+    cutCable = 'bomb:cutCable',
     setState = 'bomb:setState',
 }
 

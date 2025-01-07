@@ -5,10 +5,8 @@
 ---@alias TBombState 'started' | 'defused' | 'planting' | 'defusing' | nil
 
 ---@class TTimer
----@field id number The id of the timer, index
 ---@field object number The object handle of the digit object
----@field number number The number of the digit
----@field changed boolean Whether the digit has changed
+---@field value number The number of the digit
 
 ---@class TBombConstructor
 ---@field id number The id of the bomb
@@ -25,13 +23,14 @@
 ---@field inRange boolean Whether the bomb is in range of the player
 
 ---@class TBombServer : TBomb
----
 
 ---@class TCable
 ---@field id number The id of the cable, index
----@field set boolean Whether the cable is already set
+---@field cut boolean Whether the cable is already cut
 ---@field colour TCableColours The colour of the cable
 ---@field object number? The object handle of the cable
----@field trigger boolean Whether the cable is a trigger
+---@field trigger boolean? Whether the cable is a trigger
+---@field defuse boolean? Whether the cable is a trigger
+---@field trap boolean? Whether the cable is a trigger
 
 ---@alias TUpdateTimerKey  '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '0' | 'Enter'

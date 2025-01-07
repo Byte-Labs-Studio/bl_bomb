@@ -14,11 +14,8 @@
 </script>
 
 <Visibility>
-
-<Cables />
-<Keypad />
-
-
+    <Cables />
+    <Keypad />
 </Visibility>
 
 {#if import.meta.env.DEV}

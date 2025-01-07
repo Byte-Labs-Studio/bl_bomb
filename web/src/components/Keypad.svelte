@@ -1,22 +1,22 @@
 <script lang="ts">
     import { SendEvent } from '@utils/eventsHandlers';
-    import { KEYS } from './data';
+    import { keyPadPosition } from './data';
     import { Send } from '@enums/events';
-    import { BOMB } from '@stores/bomb';
+
+    type KeyValue = number | 'Enter';
+    const keys: KeyValue[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'Enter', 0];
 
     function keyPress(key: number | 'Enter') {
-        if (!$BOMB.id) return;
-        SendEvent(Send.updateTimer, {
-            id: $BOMB.id,
-            key,
-        });
+        SendEvent(Send.updateTimer, key);
     }
 </script>
 
-{#each KEYS as { key, x, y }}
+
+<div style="left: {keyPadPosition.x}vw; top: {keyPadPosition.y}vh;" class="absolute grid grid-cols-3 w-[3.6vw] gap-[0.3vw]">
+{#each keys as value, key}
     <button
-        style="left: {x}vw; top: {y}vh;"
-        class=" h-[1.8vh] {key == 'Enter' ? 'w-[2.2vw]' : 'w-[1vw]'} absolute  text-txt-secondary hover:bg-gray-400 hover:opacity-10"
-        on:click={() => keyPress(key)}
+        class="h-[1.8vh] {value == 'Enter' ? 'w-[2.2vw] col-span-2' : 'w-[1vw]'} text-txt-secondary hover:bg-gray-400 hover:opacity-10"
+        on:click={() => keyPress(value)}
     />
 {/each}
+</div>

@@ -1,12 +1,14 @@
-local Config = {}
+return {
+    ---The name of the item that can be used to create a bomb
+    briefCase = {
+        open = `lev_briefcase`,
+        closed = `lev_briefcase_hold`
+    },
+    itemName = 'bomb_suitcase',
+    ---range in which the bomb will explode effectively
+    deathRange = 10,
 
----The name of the item that can be used to create a bomb
-Config.ItemName = 'bomb_suitcase'
+    transitionTime = 2000,
 
----The range of the bomb in meters
-Config.Range = 30
-
----The duration of the bomb's timer in seconds
-Config.TimerDuration = 30
-
-return Config
+    trapCableDeductTime = 5000, --ms
+}

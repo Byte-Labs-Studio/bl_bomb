@@ -1,9 +1,10 @@
 <script lang="ts">
     import { Send } from '@enums/events';
-    import { BOMB, CABLES } from '@stores/bomb';
+    import { CABLES } from '@stores/bomb';
     import { SendEvent } from '@utils/eventsHandlers';
-    import { fade, scale } from 'svelte/transition';
-
+    import { scale } from 'svelte/transition';
+    import Fa from 'svelte-fa';
+    import { faScissors } from '@fortawesome/free-solid-svg-icons';
     let width: number = window.innerWidth;
     let height: number = window.innerHeight;
 
@@ -13,20 +14,17 @@
     let grabbedIndex: number | null = null;
 
     const POSITION: number[][] = [
-        [30.2, 76.6],
-        [32.2, 76.6],
-        [43.7, 76.6],
-        [45.9, 76.6],
+        [62, 60.6],
+        [59.2, 60.6],
+        [58, 60.6],
+        [60.8, 60.6],
     ];
 
-    function setCable(cableid: number) {
-        if (!grabbedIndex) return;
-        if (!$BOMB.id) return;
-        SendEvent(Send.setCable, {
-            bombid: $BOMB.id,
-            cableid,
-        });
-    }
+    // function setCable(cableid: number) {
+    //     if (!grabbedIndex) return;
+
+    //     SendEvent(Send.setCable, cableid);
+    // }
 </script>
 
 <svelte:window
@@ -45,52 +43,18 @@
     bind:clientWidth={width}
     class="w-screen h-screen absolute top-0 left-0"
 >
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="w-screen h-screen"
-        viewBox="0 0 {width} {height}"
-    >
-        {#each $CABLES as { id, colour }}
-            {#if grabbedIndex === id}
-                {@const pos = POSITION[id - 1]}
-                <line
-                    transition:fade={{ duration: 100 }}
-                    x1="{pos[0] + 0.5}vw"
-                    y1="{pos[1] + 1}vh"
-                    x2={mouseX}
-                    y2={mouseY}
-                    stroke={colour}
-                    stroke-width="0.2vh"
-                    opacity="0.5"
-                    stroke-dasharray="1vh 0.5vh"
-                />
-            {/if}
-        {/each}
-    </svg>
-
-    {#each $CABLES as { id, colour, set }, i}
-        {#if !set}
+    {#each $CABLES as { id, colour, cut }}
+        {#if !cut}
             {@const pos = POSITION[id - 1]}
             <button
-                transition:scale|global={{ duration: 100 }}
-                on:mousedown={() => {
-                    grabbedIndex = id;
-                    document.body.style.cursor = 'grabbing';
+                style="left: {pos[0]}vw; top: {pos[1]}vh; color: {colour}"
+                class="absolute"
+                on:click={() => {
+                    SendEvent(Send.setCable, id);
                 }}
-                class="cursor-grab h-[2vh] w-[2vh] absolute rounded-full opacity-50"
-                style="left: {pos[0]}vw; top: {pos[1]}vh; background-color: {colour};"
-            />
+            >
+                <Fa icon={faScissors} class="opacity-70 hover:cursor-pointer" />
+            </button>
         {/if}
     {/each}
-
-    {#if grabbedIndex !== null}
-        <button
-            on:mouseup={() => {
-                setCable(grabbedIndex);
-            }}
-            transition:fade={{ duration: 100 }}
-            class="w-[7vh] h-[2vh] absolute top-[48.1vh] right-[37.7vw] opacity-50"
-            style="background-color: {$CABLES[grabbedIndex - 1].colour};"
-        />
-    {/if}
 </div>

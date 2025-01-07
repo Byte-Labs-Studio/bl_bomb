@@ -11,10 +11,8 @@ export interface TTimer {
 
 export interface TCable {
     id: number
-    colour: TCableColours
-    set: boolean
-    trigger: boolean
-    object: number | undefined
+    colour: TCableColours,
+    cut?: boolean
 }
 
 export interface TBomb {

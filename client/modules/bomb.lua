@@ -1,47 +1,68 @@
-local Data = lib.load('data.constants')
-local Config = lib.load('data.config')
-local Bomb = {}
-Bomb.__index = Bomb
+local data
+local Bomb = lib.class('Bomb')
+local entities = {}
 
 --- Creates a new bomb
---- @param id number The unique ID of the bomb
---- @param x number The x position of the bomb
---- @param y number The y position of the bomb
---- @param z number The z position of the bomb
---- @param w number The heading of the bomb
---- @return Bomb
-function Bomb:new(id, x, y, z, w)
-    local object = self:createBomb(x, y, z)
-    ---@class TBomb
-    local bomb = {
-        id = id,
-        coords = vector4(x, y, z, w),
-        state = nil,
-        object = object,
-        targetId = self:createTarget(object),
-        timer = self:createTimer(x, y, z),
-        cables = self:createCables(),
-        tickTime = GetGameTimer(),
-        timerEnd = GetGameTimer() + (Config.TimerDuration or 30) * 1000,
-        point = self:createPoint(vector3(x, y, z))
-    }
+--- @param bombData {position: vector4, id: number, code: number, cables: TCable[], cuttedCables: table<string, boolean>, duration: number} The heading of the bomb
+function Bomb:constructor(bombData)
+    self.coords = bombData.position.xyz
+    self.heading = bombData.position.w
+    self.id = bombData.id
+    self.code = bombData.code
+    self.point = self:createPoint()
+    self.cables = bombData.cables
 
-    self = setmetatable(bomb, Bomb)
+    local cutted = bombData.cuttedCables
+    if cutted then
+        for i = 1, 4 do
+            self.cables[i].cut = cutted[tostring(i)]
+        end
+    end
+    local duration = bombData.duration
+    if duration then
+        self.timerEnd = GetGameTimer() + ((duration * 60) or 30) * 1000
+    end
+end
 
-    TriggerServerEvent("bl_bomb:server:requestState", id)
+--- Creates a point around the bomb
+--- @return table|nil
+function Bomb:createPoint()
+    local coords = self.coords
+    local range = 30
+    return lib.points.new({
+        coords = coords,
+        distance = range,
+        debug = true,
+        onEnter = function()
+            data = require 'data.bomb'
 
-    return self
+            self.timer = {}
+            self.object = self:createBomb()
+            self.targetId = self:createTarget()
+            self:createCables()
+            if self.timerEnd then
+                self:startTimerCountdown()
+            else
+                self:resetTimer()
+            end
+        end,
+        onExit = function()
+            self:destroyOnLeave()
+        end
+    })
 end
 
 --- Creates a target for the bomb
---- @return any
-function Bomb:createTarget(object)
+--- @return number
+function Bomb:createTarget()
+    local object = self.object
     return Framework.target.addLocalEntity({
         entity = object,
         options = {
             {
                 label = "Take a closer look",
                 icon = "fa-regular fa-eye",
+                distance = 2,
                 onSelect = function()
                     self:openBomb()
                 end
@@ -49,153 +70,323 @@ function Bomb:createTarget(object)
             {
                 label = "Pick up",
                 icon = "fa-regular fa-hand",
+                distance = 2,
                 canInteract = function()
-                    return not self.state
+                    return not self.active
                 end,
                 onSelect = function()
-                    self:pickUp()
+                    TriggerServerEvent('bl_bomb:server:removeBomb', self.id)
                 end
             }
         },
     })
 end
 
---- Creates a point around the bomb
---- @return any
-function Bomb:createPoint(coords)
-    if not coords then
-        return nil
-    end
-
-    local range = Config.Range or 30
-    return lib.points.new({
-        coords = coords,
-        distance = range,
-        debug = true,
-        onEnter = function()
-            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, true)
-        end,
-        onExit = function()
-            TriggerServerEvent('bl_bomb:server:updatePlayerRange', self.id, false)
-            self:clearDataExceptPosition()
-        end
-    })
-end
-
 --- Opens the bomb
 function Bomb:openBomb()
-    SendNUIEvent(Send.visible, true)
-    SetNuiFocus(true, true)
-end
+    local utils = require 'client.modules.utils'
+    local sendNUIEvent = utils.sendNUIEvent
+    utils.createCam(self.object)
 
---- Picks up the bomb
-function Bomb:pickUp()
-    TriggerServerEvent('bl_bomb:server:removeBomb', self.id)
+    LocalPlayer.state:set('atBomb', self.id, true)
+
+    sendNUIEvent('bomb:visible', true)
+    if self.active and self.cables then
+        sendNUIEvent('bomb:setCables', self.cables)
+    end
+    SetNuiFocus(true, true)
+    utils.focusedBomb = self
 end
 
 --- Destroys the bomb
-function Bomb:destroy()
-    if self.object then
-        DeleteObject(self.object)
+function Bomb:destroyOnLeave()
+    local briefObject = self.object
+    if briefObject then
+        DeleteObject(briefObject)
         self.object = nil
     end
     if self.targetId then
         Framework.target.removeZone(self.targetId)
         self.targetId = nil
     end
+    for _,v in pairs(self.timer or {}) do
+        local object = v.object
+        if object then
+            DeleteObject(object)
+        end
+    end
+    for _,v in pairs(self.cables or {}) do
+        local object = v.object
+        if object then
+            DeleteObject(object)
+        end
+    end
     self.timer = nil
+    self.active = nil
     self.cables = nil
-    self.state = nil
+end
+
+function Bomb:destroyAll()
+    self:destroyOnLeave()
+
+    self.coords = nil
+    self.heading = nil
+    self.id = nil
+    self.code = nil
+    self.point:remove()
+    self.point = nil
+    self.soundId = nil
+
+    collectgarbage('collect')
 end
 
 --- Creates a bomb object
---- @param x number
---- @param y number
---- @param z number
---- @return any
-function Bomb:createBomb(x, y, z)
-    local model = lib.requestModel(`lev_briefcase`)
-
-    -- The offset is to make the bomb look like it's in front of the player
-    local bombOffset = -0.8
-    y = y + bombOffset
-
-    local object = CreateObject(model, x, y - bombOffset, z, true, true, false)
-    while not DoesEntityExist(object) do
-        Wait(100)
-    end
+--- @return number
+function Bomb:createBomb()
+    local coords = self.coords
+    local model = lib.requestModel(require'data.config'.briefCase.open)
+    local object = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+    SetEntityHeading(object, self.heading+180)
+    entities[object] = true
     SetModelAsNoLongerNeeded(model)
     PlaceObjectOnGroundProperly(object)
     return object
 end
 
---- Creates timers for the bomb
---- @param x number
---- @param y number
---- @param z number
---- @return table<number, TTimer>
-function Bomb:createTimer(x, y, z)
-    local offsets = Data.TimerOffsets
-    --- @type table<number, TTimer>
-    local timers = {}
+--- Creates cables for the bomb
+--- @return table<number, TCable>
+function Bomb:createCables()
+    local coords = self.coords
+    local variationColors = data.variationColors
+    local offset = data.cableOffsets
+    local cablesModel = data.cablesModels
+    local cutCablesModels = data.cutCablesModels
+    --- @type table<number, TCable>
+    local cables = self.cables
+
     for i = 1, 4 do
-        local hash = "lev_num" .. i
-        local model = lib.requestModel(hash)
-        local offset = offsets[i]
-        local buttonx = x + offset.x
-        local buttony = y + offset.y
-        local buttonz = z + offset.z
-        local object = CreateObject(model, buttonx, buttony, buttonz, true, true, false)
-        while not DoesEntityExist(object) do
-            Wait(100)
-        end
+        local cable = cables[i]
+        local model = lib.requestModel(cable.cut and cutCablesModels[i] or cablesModel[i])
+        local cableOffset = offset[i]
+        local object = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+
+        AttachEntityToEntity(object, self.object, -1, cableOffset.x, cableOffset.y, 0.0, 0, 0, 0, false, false, false, false, 2, true)
         SetModelAsNoLongerNeeded(model)
-        timers[i] = {
-            id = i,
-            object = object,
-            number = 0,
-            changed = false,
+        SetObjectTextureVariant(object, variationColors[cable.colour])
+        entities[object] = true
+
+        cable.id = i
+        cable.colour = cable.colour
+        cable.object = object
+    end
+    return cables
+end
+
+function Bomb:playerInRange()
+    return self.object
+end
+
+function Bomb:cutCable(id)
+    local cable = self.cables[id]
+    if not cable or cable.cut then return end
+
+    cable.cut = true
+
+    if cable.defuse then
+        require'client.modules.utils'.sendNUIEvent('bomb:setCables', {})
+        self:resetTimer()
+        if LocalPlayer.state.atBomb then
+            Framework.notify({
+                title = 'Bomb defused!',
+                type = 'success',
+            })
+        end
+    elseif cable.trigger then
+        self:detonate()
+        return
+    elseif cable.trap then
+        require'client.modules.utils'.sendNUIEvent('bomb:cutCable', cable.colour)
+        local deductTime = require 'data.config'.trapCableDeductTime
+        self.timerEnd -= deductTime
+        if LocalPlayer.state.atBomb then
+            Framework.notify({
+                title = ('The trap cable, timer was reduced by %s seconds.'):format(deductTime / 1000),
+                type = 'inform',
+            })
+        end
+    end
+    if not self:playerInRange() then return end
+
+    DeleteObject(cable.object)
+    local coords = self.coords
+    local model = lib.requestModel(data.cutCablesModels[id])
+    local cableOffset = data.cableOffsets[id]
+    local object = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+    AttachEntityToEntity(object, self.object, -1, cableOffset.x, cableOffset.y, 0.0, 0, 0, 0, false, false, false, false, 2, true)
+
+    SetObjectTextureVariant(object, data.variationColors[cable.colour])
+    SetModelAsNoLongerNeeded(model)
+    cable.object = object
+end
+
+function Bomb:createNumber(index, number)
+    local oldObject = self.timer[tostring(index)]?.object
+    if oldObject then
+        entities[oldObject] = nil
+        DeleteEntity(oldObject)
+    end
+    local model = lib.requestModel(data.numModels[number])
+    local offset = data.timerOffsets[index]
+    if not offset then return end
+
+    local coords = self.coords
+    local object = CreateObject(model, coords.x + offset.x, coords.y + offset.y, coords.z, false, false, false)
+    AttachEntityToEntity(object, self.object, -1, offset.x, offset.y, -0.01, 0, 0, 0, false, false, false, false, 2, true)
+
+    SetModelAsNoLongerNeeded(model)
+
+    entities[object] = true
+    return object
+end
+
+function Bomb:resetTimer()
+    local timer = self.timer
+    self.active = false
+    self.timerEnd = nil
+    for i=1, 5 do
+        local object = self:createNumber(i, 0)
+        timer[tostring(i)] = {
+            value = 0,
+            object = object
         }
     end
+end
 
-    self:startTimerCountdown()
+function Bomb:insertNumber(number)
+    local index = self.editedIndex and self.editedIndex-1 or 3
+    if index <= 0 then
+        index = 3
+    end
+    local object = self:createNumber(index, number)
+    if not object then return end
 
-    return timers
+    if not self.timerDuration then
+        self.timerDuration = '000'
+    end
+
+    self.timerDuration = require'client.modules.utils'.replaceCharAtReverseIndex(self.timerDuration, index, number)
+    self.editedIndex = index
+    self.timer[tostring(index)] = {
+        value = number,
+        object = object
+    }
 end
 
 --- Starts the bomb's timer countdown
-function Bomb:startTimerCountdown()
-    local function tick()
-        if not self.tickTime or self:getSecondsLeft() <= 0 then
-            self:detonate()
-            return
+---@param duration? number
+function Bomb:startTimerCountdown(duration)
+    self.active = true
+    self.timerEnd = self.timerEnd or (GetGameTimer() + ((duration * 60) or 30) * 1000)
+    if not self:playerInRange() then return end
+
+    Citizen.CreateThreadNow(function()
+        while self.active do
+            pcall(function()
+                self:handleTimerTick()
+            end)
+            Wait(950)
         end
-        self:handleTimerTick()
-        SetTimeout(1000, tick)
+    end)
+
+    Citizen.CreateThreadNow(function()
+        self.soundId = GetSoundId()
+        while self.active do
+            self:handleTimerSound()
+            Wait(500)
+        end
+    end)
+end
+
+function Bomb:disableBomb(value)
+    self.value = (self.value or '')..tostring(value)
+    local insertedValue = tonumber(self.value)
+    if #self.value ~= 4 or not insertedValue then return end
+    if insertedValue ~= self.code then
+        Framework.notify({
+            title = 'Wrong Code',
+            type = 'error',
+        })
+        self.value = ''
+        return
     end
-    tick()
+
+    local validate = lib.callback.await('bl_bomb:server:validCode', false, {
+        code = insertedValue,
+        id = self.id
+    })
+    if validate then
+        Framework.notify({
+            title = 'Bomb desactivated!',
+            type = 'success',
+        })
+        self:resetTimer()
+        require'client.modules.utils'.sendNUIEvent('bomb:setCables', {})
+    else
+        self.value = ''
+    end
+end
+
+function Bomb:handleTimerSound()
+    local secondsLeft = self:getSecondsLeft()
+    local soundId = self.soundId
+
+    Wait(secondsLeft > 10 and 2000 or (secondsLeft / 2) * 50)
+    PlaySoundFromEntity(soundId, "IDLE_BEEP", self.object, "EPSILONISM_04_SOUNDSET", false, 20)
 end
 
 --- Handles the timer tick
 function Bomb:handleTimerTick()
-    local currentTime = GetGameTimer()
-    local timeElapsed = (currentTime - self.tickTime) / 1000
     local secondsLeft = self:getSecondsLeft()
+    local minutes = tostring(math.floor(secondsLeft / 60))
+    local seconds = tostring(secondsLeft % 60)
+    local timer = self.timer
+    if not timer then return end
 
-    if timeElapsed >= 1 then
-        self.tickTime = currentTime
+    local function updateObject(charValue, index)
+        if charValue == "" then charValue = "0" end
 
-        local sound = secondsLeft <= 10 and "Beep_Red" or "Beep_Blue"
-        PlaySoundFromEntity(-1, sound, self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
-
-        if secondsLeft <= 0 then
-            self:detonate()
+        local stringIndex = tostring(index)
+        local v = timer[stringIndex]
+        local numberVal = tonumber(charValue)
+        if numberVal and v?.value ~= numberVal then
+            timer[stringIndex] = {
+                object = self:createNumber(index, numberVal),
+                value = numberVal,
+            }
         end
     end
+    for i = 1, 3 do -- minutes
+        local charValue = string.sub(minutes, i, i)
+        updateObject(charValue, i)
+    end
+    for i = 1, 2 do -- seconds
+        local charValue = string.sub(seconds, i, i)
+        local position = i + 3
+        if tonumber(seconds) < 10 then
+            position += 1
+        end
+        position = position == 6 and 4 or position
+        updateObject(charValue, position)
+    end
 
-    if secondsLeft < 10 then
-        Wait(500)
-        PlaySoundFromEntity(-1, "Beep_Red", self.object, "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", false, 0)
+    if secondsLeft <= 0 then
+        self.active = false
+
+        local soundId = self.soundId
+        StopSound(soundId)
+        ReleaseSoundId(soundId)
+
+        self:detonate()
     end
 end
 
@@ -209,61 +400,34 @@ end
 
 --- Detonates the bomb
 function Bomb:detonate()
-    if not self.coords then
+    local coords = self.coords
+    if not coords then
         return
     end
+    if LocalPlayer.state.atBomb then
+        require'client.modules.utils'.closeUi(true)
+    end
+
     local explosionType = 2
     local explosionRadius = 5.0
     local isAudible = true
     local isInvisible = false
     local cameraShake = 1.0
-    AddExplosion(self.coords.x, self.coords.y, self.coords.z, explosionType, explosionRadius, isAudible, isInvisible, cameraShake)
-    local playerCoords = GetEntityCoords(cache.ped)
-    local distance = #(self.coords - playerCoords)
-    if distance < 10 then
-        SetEntityHealth(cache.ped, 0)
+    AddExplosion(coords.x, coords.y, coords.z, explosionType, explosionRadius, isAudible, isInvisible, cameraShake)
+
+    local ped = cache.ped
+    local playerCoords = GetEntityCoords(ped)
+    local distance = #(coords - playerCoords)
+    if distance < require 'data.config'.deathRange then
+        SetEntityHealth(ped, 0)
     end
-    self:destroy()
 end
 
---- Randomizes cable colors
---- @param colours table<number, string> The list of colors to randomize
---- @return table<number, string> The shuffled list of colors
-local function randomColours(colours)
-    local shuffled = table.clone(colours)
-    for i = #shuffled, 2, -1 do
-        local j = math.random(1, i)
-        shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= cache.resource then return end
+    for entity in pairs(entities) do
+        DeleteEntity(entity)
     end
-    return shuffled
-end
-
---- Creates cables for the bomb
---- @return table<number, TCable>
-function Bomb:createCables()
-    local colours = randomColours(Data.CableColoursForIndex)
-
-    --- @type table<number, TCable>
-    local cables = {}
-    for i = 1, 4 do
-        local colour = colours[i]
-        local offset = Data.CableUIPosition[i]
-        cables[i] = {
-            id = i,
-            colour = colour,
-            set = false,
-            trigger = false,
-            object = nil,
-        }
-    end
-    return cables
-end
-
---- Clears bomb data except its position
-function Bomb:clearDataExceptPosition()
-    self.state = nil
-    self.timer = {}
-    self.cables = {}
-end
+end)
 
 return Bomb
