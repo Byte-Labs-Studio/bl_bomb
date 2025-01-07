@@ -1,3 +1,11 @@
+![TextWhite](https://github.com/user-attachments/assets/01003519-10b1-448b-8d8c-1d3f5b14688b)
+# Byte Labs - Bomb
+C4 Bomb Briefcase for FiveM.
+
+Website: [Byte Labs](https://byte-labs.net)
+Discord: [Byte Labs](https://discord.gg/fqsqSjZfxE)
+
+
 # Server export
 ```lua
 ---@alias TCableColours 'red' | 'yellow' | 'blue' | 'green' | 'silver' | 'brown'
