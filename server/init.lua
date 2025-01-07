@@ -75,7 +75,7 @@ RegisterNetEvent('bl_bomb:server:placeBomb', function(coords)
     local player = core.GetPlayer(src)
     if not player then return end
 
-    -- player.removeItem(config.itemName, 1, metadata.slot)
+    player.removeItem(config.itemName, 1, metadata.slot)
     metadata.slot = nil
 
     local ped = GetPlayerPed(src)
