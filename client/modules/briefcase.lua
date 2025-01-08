@@ -21,19 +21,31 @@ local function removeBriefCase()
     end
 end
 
+AddStateBagChangeHandler("holdingBriefcase", nil, function(bagName, keyName, value, _, replicated)
+    if replicated then return end
+    if not value then
+        removeBriefCase()
+        return
+    end
+
+    local ped = GetPlayerPed(GetPlayerFromStateBagName(bagName))
+    if not DoesEntityExist(ped) then return end
+
+    local model = require 'data.config'.briefCase.closed
+    lib.requestModel(model)
+    local coords = GetEntityCoords(ped)
+
+    briefCase = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+    SetModelAsNoLongerNeeded(model)
+    AttachEntityToEntity(briefCase, ped, GetPedBoneIndex(ped, 4089),0.0,0.0,0.0,110.0,150.0,100.0,false,false,false,true,2,true)
+end)
+
 local function holdBriefCase()
     if cache.vehicle then return end
 
     if briefCase and DoesEntityExist(briefCase) then return end
 
-    local model = require 'data.config'.briefCase.closed
-    lib.requestModel(model)
-
-    local ped = cache.ped
-    local coords = GetEntityCoords(ped)
-    briefCase = CreateObject(model, coords.x, coords.y, coords.z, true, true, true)
-    SetModelAsNoLongerNeeded(model)
-    AttachEntityToEntity(briefCase,ped, GetPedBoneIndex(ped, 4089),0.0,0.0,0.0,110.0,150.0,100.0,false,false,false,true,2,true)
+    LocalPlayer.state:set('holdingBriefcase', true, true)
 
     lib.showTextUI('[H] Place, [G] Stash')
 
@@ -42,6 +54,7 @@ local function holdBriefCase()
         lib.hideTextUI()
         stashControl:disable(true)
         placeControl:disable(true)
+        LocalPlayer.state:set('holdingBriefcase', false, true)
     end
 
     stashControl:disable(false)
@@ -49,10 +62,12 @@ local function holdBriefCase()
 
     placeControl:disable(false)
     placeControl.onReleased = function(self)
+        if not briefCase then return end
         if self.clicked then return end
+        local ped = cache.ped
 
         self.clicked = true
-        coords = GetEntityCoords(ped)
+        local coords = GetEntityCoords(ped)
         local off = GetEntityForwardVector(ped)
         local position = vec3(coords.x + (off.x / 1.3), coords.y + (off.y/ 1.3), coords.z - 0.9)
 
