@@ -25,7 +25,7 @@ local function removeBriefCase(serverId)
 end
 
 RegisterNetEvent('onPlayerDropped', function(serverId)
-    removeBriefCase(serverId)
+    removeBriefCase(type(serverId) == 'string' and serverId or tostring(serverId))
 end)
 
 AddStateBagChangeHandler("holdingBriefcase", nil, function(bagName, keyName, value, _, replicated)
@@ -54,7 +54,7 @@ end)
 
 local function holdBriefCase()
     if cache.vehicle then return end
-    local serverId = GetPlayerServerId(cache.playerId)
+    local serverId = tostring(GetPlayerServerId(cache.playerId))
     local briefCase = briefCases[serverId]
     if briefCase and DoesEntityExist(briefCase) then return end
 
