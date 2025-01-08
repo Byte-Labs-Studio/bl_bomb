@@ -1,5 +1,6 @@
-local briefCase = nil
-
+local briefCases = {}
+local cache = cache
+local lib = lib
 local placeControl = lib.addKeybind({
     name = 'place_briefcase',
     description = 'Place the briefcase',
@@ -14,35 +15,47 @@ local stashControl = lib.addKeybind({
     disabled = true,
 })
 
-local function removeBriefCase()
+local function removeBriefCase(serverId)
+    local briefCase = briefCases[serverId]
     if briefCase and DoesEntityExist(briefCase) then
         SetEntityAsMissionEntity(briefCase, true, true)
         DeleteEntity(briefCase)
     end
+    briefCases[serverId] = nil
 end
+
+RegisterNetEvent('onPlayerDropped', function(serverId)
+    removeBriefCase(serverId)
+end)
 
 AddStateBagChangeHandler("holdingBriefcase", nil, function(bagName, keyName, value, _, replicated)
     if replicated then return end
-    if not value then
-        removeBriefCase()
+
+    local playerId = GetPlayerFromStateBagName(bagName)
+    local ped = GetPlayerPed(playerId)
+    if not DoesEntityExist(ped) then return end
+
+    local serverId = tostring(GetPlayerServerId(playerId))
+
+    if serverId and not value then
+        removeBriefCase(serverId)
         return
     end
-
-    local ped = GetPlayerPed(GetPlayerFromStateBagName(bagName))
-    if not DoesEntityExist(ped) then return end
 
     local model = require 'data.config'.briefCase.closed
     lib.requestModel(model)
     local coords = GetEntityCoords(ped)
 
-    briefCase = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+    local briefCase = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
     SetModelAsNoLongerNeeded(model)
     AttachEntityToEntity(briefCase, ped, GetPedBoneIndex(ped, 4089),0.0,0.0,0.0,110.0,150.0,100.0,false,false,false,true,2,true)
+    briefCases[serverId] = briefCase
 end)
 
 local function holdBriefCase()
     if cache.vehicle then return end
-
+    local serverId = GetPlayerServerId(cache.playerId)
+    local briefCase = briefCases[serverId]
     if briefCase and DoesEntityExist(briefCase) then return end
 
     LocalPlayer.state:set('holdingBriefcase', true, true)
@@ -50,7 +63,6 @@ local function holdBriefCase()
     lib.showTextUI('[H] Place, [G] Stash')
 
     local function handleClick()
-        removeBriefCase()
         lib.hideTextUI()
         stashControl:disable(true)
         placeControl:disable(true)
@@ -62,8 +74,11 @@ local function holdBriefCase()
 
     placeControl:disable(false)
     placeControl.onReleased = function(self)
+        briefCase = briefCases[serverId]
         if not briefCase then return end
+
         if self.clicked then return end
+
         local ped = cache.ped
 
         self.clicked = true
@@ -101,7 +116,10 @@ end
 
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= cache.resource then return end
-    removeBriefCase()
+
+    for k,v in pairs(briefCases) do
+        removeBriefCase(k)
+    end
 end)
 
 return {
