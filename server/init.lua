@@ -62,6 +62,7 @@ local function removeBomb(bombId)
 end
 
 core.RegisterUsableItem(config.itemName, function(src, slot, metadata)
+    metadata = metadata or {}
     metadata.slot = slot
     holdingBomb[src] = metadata or {}
     TriggerClientEvent('bl_bomb:client:holdBriefCase', src)
