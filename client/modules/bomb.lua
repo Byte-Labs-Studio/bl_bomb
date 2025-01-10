@@ -75,7 +75,7 @@ function Bomb:createTarget()
                     return not self.active
                 end,
                 onSelect = function()
-                    TriggerServerEvent('bl_bomb:server:removeBomb', self.id)
+                    TriggerServerEvent('bl_bomb:server:removeBomb', self.id, true)
                 end
             }
         },

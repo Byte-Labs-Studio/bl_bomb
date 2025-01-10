@@ -73,6 +73,7 @@ RegisterNetEvent('bl_bomb:server:placeBomb', function(coords)
     local metadata = holdingBomb[src]
     if not metadata then return end
 
+
     local player = core.GetPlayer(src)
     if not player then return end
 
@@ -94,11 +95,12 @@ RegisterNetEvent('bl_bomb:server:placeBomb', function(coords)
             if not bomb then return end
             removeBomb(id)
         end, id),
-
-        cuttedCables = {}
+        cuttedCables = {},
+        metadata = metadata
     }
 
     activeBombs[id] = data
+    holdingBomb[src] = nil
     TriggerClientEvent('bl_bomb:client:registerBomb', -1, data)
 end)
 
@@ -145,12 +147,17 @@ RegisterNetEvent('bl_bomb:server:cutCable', function(bombId, value)
     end
 end)
 
-RegisterNetEvent('bl_bomb:server:removeBomb', function(bombId)
+RegisterNetEvent('bl_bomb:server:removeBomb', function(bombId, add)
     local src = source
     local bomb = validAction(src, bombId)
 
     if not bomb then return end
 
+    if add then
+        local player = core.GetPlayer(src)
+        if not player then return end
+        player.addItem(config.itemName, 1, bomb.metadata)
+    end
     activeBombs[bombId] = nil
     TriggerClientEvent('bl_bomb:client:removeBomb', -1, bombId)
 end)
