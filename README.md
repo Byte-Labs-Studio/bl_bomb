@@ -2,6 +2,7 @@
 # Byte Labs - Bomb
 C4 Bomb Briefcase for FiveM.
 
+# [Preview](https://streamable.com/u0iumu)
 Website: [Byte Labs](https://byte-labs.net)
 Discord: [Byte Labs](https://discord.gg/fqsqSjZfxE)
 
